@@ -135,7 +135,8 @@ app.post("/api/sso/verify", ssoVerifyLimiter, async (req, res) => {
         id: user.id,
         email: user.email.toLowerCase(),
         full_name: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "",
-        email_verified: true
+        email_verified: true,
+        product_access: Array.isArray(user.app_metadata?.product_access) ? user.app_metadata.product_access : []
       }
     });
   } catch (error) {
@@ -263,7 +264,17 @@ app.post("/api/auth/verify-email", async (req, res) => {
         console.error("Post-signup sign-in failed:", signInError?.message || "No session returned");
         return fail(res, 401, "Email verified, but automatic sign-in failed. Please sign in to continue.");
       }
-      return res.json({ ok: true, message: "Email verified and signed in.", access_token: sessionData.session.access_token });
+      return res.json({
+        ok: true,
+        message: "Email verified and signed in.",
+        session: {
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+          expires_at: sessionData.session.expires_at,
+          expires_in: sessionData.session.expires_in,
+          token_type: sessionData.session.token_type
+        }
+      });
     }
     return res.json({ ok: true, message: "Email verified. You can now sign in." });
   } catch (error) {
