@@ -60,6 +60,7 @@ function AccountHome({ user, onSignOut, isBusy }) {
   const email = user.email || "";
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
   const navItems = [
+    { label: "My Products", icon: Sparkles },
     { label: "Profile", icon: UserCircle },
     { label: "Security", icon: ShieldCheck },
     { label: "Multi-Factor Authentication", icon: LockKeyhole },
@@ -89,7 +90,7 @@ function AccountHome({ user, onSignOut, isBusy }) {
       </aside>
       <section className="account-content">
         <div className="account-page-heading"><div><div className="page-eyebrow">PURAVIGAL ACCOUNTS</div><h1>{activeNav}</h1><p>Manage your account information and preferences.</p></div><div className="account-breadcrumb">Account <ChevronRight size={14}/> {activeNav}</div></div>
-        {activeNav === "Profile" ? <>
+        {activeNav === "My Products" ? <section className="products-panel"><div className="products-intro"><div className="page-eyebrow">YOUR ZENVENTORA WORKSPACE</div><h2>Products connected to your account</h2><p>Use one ZenVentora identity to access the products enabled for your account.</p></div><div className="product-access-grid">{[{slug:"emenu",name:"eMenu",description:"Digital menu and restaurant experience",url:import.meta.env.VITE_EMENU_APP_URL},{slug:"siteradar",name:"SiteRadar",description:"Website monitoring and site health",url:import.meta.env.VITE_SITERADAR_APP_URL},{slug:"visual-editor",name:"Site Visual Editor",description:"Visual website editing workspace",url:import.meta.env.VITE_VISUAL_EDITOR_APP_URL}].map(product => { const enabled = Array.isArray(user.app_metadata?.product_access) && user.app_metadata.product_access.includes(product.slug); return <article className="product-access-card" key={product.slug}><div className="product-access-icon"><Sparkles size={20}/></div><div className="product-access-copy"><h3>{product.name}</h3><p>{product.description}</p></div><span className={enabled ? "product-access-status enabled" : "product-access-status"}>{enabled ? "Access enabled" : "Not enabled"}</span>{enabled && product.url ? <a className="product-open-link" href={product.url}>Open product <ArrowRight size={15}/></a> : <span className="product-access-help">{enabled ? "Product URL will be configured soon." : "Access is managed by ZenVentora."}</span>}</article>; })}</div></section> : activeNav === "Profile" ? <>
           <div className="profile-tabs" role="tablist" aria-label="Profile sections">{profileTabs.map(tab => <button key={tab} role="tab" aria-selected={activeProfileTab === tab} className={activeProfileTab === tab ? "selected" : ""} onClick={() => setActiveProfileTab(tab)}>{tab}</button>)}</div>
           {activeProfileTab === "Personal Information" && <>
             <section className="account-panel profile-overview">
