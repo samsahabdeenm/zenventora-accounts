@@ -55,7 +55,7 @@ function BrandMark() {
 }
 
 
-function AccountHome({ user, onSignOut, isBusy }) {
+function AccountHome({ user, onSignOut, isBusy, productAccessNotice, productAccessActionUrl }) {
   const [activeNav, setActiveNav] = useState("Profile");
   const [activeProfileTab, setActiveProfileTab] = useState("Personal Information");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,6 +92,7 @@ function AccountHome({ user, onSignOut, isBusy }) {
         <div className="sidebar-bottom"><div className="help-card"><CircleHelp size={18}/><div><strong>Need help?</strong><span>We're here for you.</span></div><ChevronRight size={16}/></div><button className="sidebar-signout" onClick={onSignOut} disabled={isBusy} aria-busy={isBusy}>{isBusy ? <><span className="loading-spinner" aria-hidden="true" /> Signing out…</> : <><LogOut size={17}/> Sign out</>}</button></div>
       </aside>
       <section className="account-content">
+        {productAccessNotice && <div className="notice error" role="status"><AlertCircle size={18}/><span>{productAccessNotice} {productAccessActionUrl && <a className="text-button" href={productAccessActionUrl}>Enable access</a>}</span></div>}
         <div className="account-page-heading"><div><div className="page-eyebrow">ZENVENTORA ACCOUNTS</div><h1>{activeNav}</h1><p>Manage your account information and preferences.</p></div><div className="account-breadcrumb">Account <ChevronRight size={14}/> {activeNav}</div></div>
         {activeNav === "My Products" ? <section className="products-panel"><div className="products-intro"><div className="page-eyebrow">YOUR ZENVENTORA WORKSPACE</div><h2>Products connected to your account</h2><p>Use one ZenVentora identity to access the products enabled for your account.</p></div><div className="product-access-grid">{[{slug:"emenu",name:"eMenu",description:"Digital menu and restaurant experience",url:import.meta.env.VITE_EMENU_APP_URL},{slug:"siteradar",name:"SiteRadar",description:"Website monitoring and site health",url:import.meta.env.VITE_SITERADAR_APP_URL},{slug:"visual-editor",name:"Site Visual Editor",description:"Visual website editing workspace",url:import.meta.env.VITE_VISUAL_EDITOR_APP_URL}].map(product => { const enabled = Array.isArray(user.app_metadata?.product_access) && user.app_metadata.product_access.includes(product.slug); return <article className="product-access-card" key={product.slug}><div className="product-access-icon"><Sparkles size={20}/></div><div className="product-access-copy"><h3>{product.name}</h3><p>{product.description}</p></div><span className={enabled ? "product-access-status enabled" : "product-access-status"}>{enabled ? "Access enabled" : "Not enabled"}</span>{enabled && product.url ? <a className="product-open-link" href={product.url}>Open product <ArrowRight size={15}/></a> : <span className="product-access-help">{enabled ? "Product URL will be configured soon." : "Access is managed by ZenVentora."}</span>}</article>; })}</div></section> : activeNav === "Profile" ? <>
           <div className="profile-tabs" role="tablist" aria-label="Profile sections">{profileTabs.map(tab => <button key={tab} role="tab" aria-selected={activeProfileTab === tab} className={activeProfileTab === tab ? "selected" : ""} onClick={() => setActiveProfileTab(tab)}>{tab}</button>)}</div>
@@ -147,6 +148,10 @@ function App() {
   const [notice, setNotice] = useState(null);
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [productAccessNotice, setProductAccessNotice] = useState("");
+  const [productAccessActionUrl, setProductAccessActionUrl] = useState("");
+  const [productAccessAttempted, setProductAccessAttempted] = useState(false);
+  const requestedAuthMode = new URLSearchParams(window.location.search).get("mode") || (window.location.pathname.toLowerCase() === "/signup" ? "signup" : "signin");
   const [configured] = useState(Boolean(supabase));
   const productContext = getProductContext();
   const productLabel = PRODUCT_LABELS[productContext] || "ZenVentora";
@@ -255,19 +260,44 @@ function App() {
   }, [authStatusMode, authChecked, authStatusParent, user]);
   
   useEffect(() => {
-    if (!supabase || !user || !ssoRedirectTarget) return;
+    if (!supabase || !user || !ssoRedirectTarget || productContext === "zenventora") return;
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+    const productAccess = Array.isArray(user.app_metadata?.product_access) ? user.app_metadata.product_access : [];
+    const continueToProduct = async () => {
+      const { data } = await supabase.auth.getSession();
       const accessToken = data.session?.access_token;
-      if (!cancelled && accessToken) {
-        const refreshToken = data.session?.refresh_token;
+      const refreshToken = data.session?.refresh_token;
+      if (!cancelled && accessToken && refreshToken) {
         const state = new URLSearchParams(window.location.search).get("state") || "";
-        const fragment = new URLSearchParams({ account_access_token: accessToken, account_refresh_token: refreshToken || "", account_state: state });
+        const fragment = new URLSearchParams({ account_access_token: accessToken, account_refresh_token: refreshToken, account_state: state });
         window.location.replace(ssoRedirectTarget + "#" + fragment.toString());
       }
-    }).catch(() => {});
+    };
+    if (productAccess.includes(productContext)) {
+      void continueToProduct().catch(() => {});
+    } else if (requestedAuthMode === "signup" && !productAccessAttempted) {
+      setProductAccessAttempted(true);
+      setBusy(true);
+      supabase.auth.getSession().then(async ({ data }) => {
+        if (!data.session?.access_token) throw new Error("Your account session expired. Please sign in again.");
+        await apiPost("/api/auth/product-access", { product: productContext, access_token: data.session.access_token });
+        const refreshed = await supabase.auth.refreshSession();
+        if (refreshed.error || !refreshed.data.session) throw refreshed.error || new Error("Could not refresh your account session.");
+        if (!cancelled) {
+          setUser(refreshed.data.session.user);
+          setProductAccessNotice("");
+        }
+      }).catch(error => {
+        if (!cancelled) setProductAccessNotice(error.message || "Could not enable product access. Please try again.");
+      }).finally(() => { if (!cancelled) setBusy(false); });
+    } else if (requestedAuthMode !== "signup") {
+      setProductAccessNotice(productLabel + " access is not enabled for this account yet.");
+      const action = new URL(window.location.href);
+      action.searchParams.set("mode", "signup");
+      setProductAccessActionUrl(action.toString());
+    }
     return () => { cancelled = true; };
-  }, [user, ssoRedirectTarget]);
+  }, [user, ssoRedirectTarget, productContext, requestedAuthMode, productAccessAttempted]);
 
   function notify(type, message) { setNotice({ type, message }); }
 
@@ -407,7 +437,7 @@ function App() {
     if (nextMode === "signin") setNewPassword("");
   }
 
-  if (user) return <><AccountHome user={user} onSignOut={signOut} isBusy={busy} />{busy && <div className="operation-overlay" role="status" aria-live="polite"><div className="operation-dialog"><span className="loading-spinner loading-spinner-large" aria-hidden="true" /><strong>Signing you out…</strong><span>Please wait while we securely end your session.</span></div></div>}</>;
+  if (user) return <><AccountHome user={user} onSignOut={signOut} isBusy={busy} productAccessNotice={productAccessNotice} productAccessActionUrl={productAccessActionUrl} />{busy && <div className="operation-overlay" role="status" aria-live="polite"><div className="operation-dialog"><span className="loading-spinner loading-spinner-large" aria-hidden="true" /><strong>Signing you out…</strong><span>Please wait while we securely end your session.</span></div></div>}</>;
 
   if (authStatusMode) return <div aria-hidden="true" />;
 
