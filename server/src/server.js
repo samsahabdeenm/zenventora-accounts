@@ -188,7 +188,7 @@ app.post("/api/auth/product-signup", async (req, res) => {
   const countryName = typeof req.body?.countryName === "string" ? req.body.countryName.trim() : "";
   const phoneNumber = typeof req.body?.phoneNumber === "string" ? req.body.phoneNumber.replace(/[^0-9]/g, "") : "";
   const marketingConsent = req.body?.marketingConsent === true;
-  if (!["puravigal", "pos"].includes(product)) return fail(res, 400, "Choose a valid ZenVentora product.");
+  if (!["zenventora", "emenu", "siteradar", "visual-editor"].includes(product)) return fail(res, 400, "Choose a valid ZenVentora product.");
   if (!validEmail(email) || typeof password !== "string" || password.length < 8 || password.length > 128 || fullName.length < 2 || fullName.length > 120) {
     return fail(res, 400, "Enter a valid email, full name, and password of at least 8 characters.");
   }
