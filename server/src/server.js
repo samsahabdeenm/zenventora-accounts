@@ -13,10 +13,10 @@ app.disable("x-powered-by");
 app.use(helmet());
 app.use(express.json({ limit: "20kb" }));
 
-const frontendOrigin = process.env.FRONTEND_ORIGIN || "https://accounts.puravigal.com";
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "https://accounts.zenventora.in";
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || origin === frontendOrigin || origin === "https://accounts.puravigal.com" || origin === "https://puravigal.com" || origin === "https://www.puravigal.com") return callback(null, true);
+    if (!origin || origin === frontendOrigin || origin === "https://accounts.zenventora.in" || origin === "https://zenventora.in" || origin === "https://www.zenventora.in") return callback(null, true);
     return callback(new Error("Origin not allowed"));
   },
   methods: ["GET", "POST"],
@@ -70,18 +70,18 @@ async function findUserByEmail(email) {
 }
 async function sendOtpEmail(email, otp, purpose) {
   const isSignup = purpose === "signup";
-  const subject = isSignup ? "Your Puravigal verification code" : "Your Puravigal password reset code";
-  const heading = isSignup ? "Verify your Puravigal account" : "Reset your Puravigal password";
+  const subject = isSignup ? "Your ZenVentora verification code" : "Your ZenVentora password reset code";
+  const heading = isSignup ? "Verify your ZenVentora account" : "Reset your ZenVentora password";
   const action = isSignup ? "verify your email address" : "reset your password";
-  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#17213b"><h2>Puravigal Accounts</h2><p>Use this code to ${action}:</p><div style="font-size:32px;font-weight:800;letter-spacing:8px;padding:16px;background:#f3f6ff;border-radius:10px;text-align:center">${otp}</div><p>This code expires in 10 minutes and can be used only once.</p><p>If you did not request this, you can safely ignore this email.</p></div>`;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#17213b"><h2>ZenVentora Accounts</h2><p>Use this code to ${action}:</p><div style="font-size:32px;font-weight:800;letter-spacing:8px;padding:16px;background:#f3f6ff;border-radius:10px;text-align:center">${otp}</div><p>This code expires in 10 minutes and can be used only once.</p><p>If you did not request this, you can safely ignore this email.</p></div>`;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Authorization": "Bearer " + RESEND_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Puravigal Accounts <" + RESEND_FROM_EMAIL + ">",
+      from: "ZenVentora Accounts <" + RESEND_FROM_EMAIL + ">",
       to: [email],
       subject,
-      text: `Your Puravigal code is ${otp}. It expires in 10 minutes. If you did not request this, ignore this email.`,
+      text: `Your ZenVentora code is ${otp}. It expires in 10 minutes. If you did not request this, ignore this email.`,
       html
     }),
     signal: AbortSignal.timeout(15000)
@@ -116,7 +116,7 @@ async function issueOtp(user, purpose) {
 
 app.get("/health", (_req, res) => res.json({ ok: true, configured, ssoConfigured: Boolean(admin) }));
 
-// Server-to-server verification endpoint for connected Puravigal products.
+// Server-to-server verification endpoint for connected ZenVentora products.
 // It accepts only a Supabase access token and returns the verified account's minimal identity.
 const ssoVerifyLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: "draft-7", legacyHeaders: false });
 app.post("/api/sso/verify", ssoVerifyLimiter, async (req, res) => {
@@ -129,7 +129,7 @@ app.post("/api/sso/verify", ssoVerifyLimiter, async (req, res) => {
     const { data, error } = await admin.auth.getUser(accessToken);
     const user = data?.user;
     if (error || !user || !user.email || !user.email_confirmed_at) {
-      return fail(res, 401, "The Puravigal account session is invalid or the email is not verified.");
+      return fail(res, 401, "The ZenVentora account session is invalid or the email is not verified.");
     }
     return res.json({
       user: {
@@ -149,6 +149,7 @@ app.post("/api/auth/signup", async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = req.body?.password;
   const fullName = typeof req.body?.fullName === "string" ? req.body.fullName.trim() : "";
+  const product = typeof req.body?.product === "string" && /^[a-z0-9-]{2,40}$/i.test(req.body.product.trim()) ? req.body.product.trim().toLowerCase() : "zenventora";
   if (!validEmail(email) || typeof password !== "string" || password.length < 8 || password.length > 128 || fullName.length < 2 || fullName.length > 120) {
     return fail(res, 400, "Enter a valid email, full name, and password of at least 8 characters.");
   }
@@ -157,13 +158,13 @@ app.post("/api/auth/signup", async (req, res) => {
     if (user?.email_confirmed_at) return fail(res, 409, "An account with this email already exists. Sign in or reset your password.");
     if (user) {
       const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-        password, user_metadata: { ...(user.user_metadata || {}), full_name: fullName }, email_confirm: false
+        password, user_metadata: { ...(user.user_metadata || {}), full_name: fullName, signup_product: product }, email_confirm: false
       });
       if (error) throw error;
       user = data.user;
     } else {
       const { data, error } = await admin.auth.admin.createUser({
-        email, password, email_confirm: false, user_metadata: { full_name: fullName }
+        email, password, email_confirm: false, user_metadata: { full_name: fullName, signup_product: product }
       });
       if (error) throw error;
       user = data.user;
@@ -187,7 +188,7 @@ app.post("/api/auth/product-signup", async (req, res) => {
   const countryName = typeof req.body?.countryName === "string" ? req.body.countryName.trim() : "";
   const phoneNumber = typeof req.body?.phoneNumber === "string" ? req.body.phoneNumber.replace(/[^0-9]/g, "") : "";
   const marketingConsent = req.body?.marketingConsent === true;
-  if (!["puravigal", "pos"].includes(product)) return fail(res, 400, "Choose a valid Puravigal product.");
+  if (!["zenventora", "emenu", "siteradar", "visual-editor"].includes(product)) return fail(res, 400, "Choose a valid ZenVentora product.");
   if (!validEmail(email) || typeof password !== "string" || password.length < 8 || password.length > 128 || fullName.length < 2 || fullName.length > 120) {
     return fail(res, 400, "Enter a valid email, full name, and password of at least 8 characters.");
   }
@@ -342,4 +343,4 @@ app.use((error, _req, res, _next) => {
 });
 
 const port = Number(process.env.PORT || 10000);
-app.listen(port, () => console.log("Puravigal Accounts OTP API listening on port " + port));
+app.listen(port, () => console.log("ZenVentora Accounts OTP API listening on port " + port));
