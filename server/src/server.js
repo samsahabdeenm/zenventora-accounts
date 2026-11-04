@@ -157,13 +157,13 @@ app.post("/api/auth/signup", async (req, res) => {
     if (user?.email_confirmed_at) return fail(res, 409, "An account with this email already exists. Sign in or reset your password.");
     if (user) {
       const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-        password, user_metadata: { ...(user.user_metadata || {}), full_name: fullName, signup_source: "zenventora", product_access: Array.isArray(user.user_metadata?.product_access) ? user.user_metadata.product_access : [] }, email_confirm: false
+        password, user_metadata: { ...(user.user_metadata || {}), full_name: fullName, signup_source: "zenventora" }, app_metadata: { ...(user.app_metadata || {}), product_access: Array.isArray(user.app_metadata?.product_access) ? user.app_metadata.product_access : [] }, email_confirm: false
       });
       if (error) throw error;
       user = data.user;
     } else {
       const { data, error } = await admin.auth.admin.createUser({
-        email, password, email_confirm: false, user_metadata: { full_name: fullName, signup_source: "zenventora", product_access: [] }
+        email, password, email_confirm: false, user_metadata: { full_name: fullName, signup_source: "zenventora" }, app_metadata: { product_access: [] }
       });
       if (error) throw error;
       user = data.user;
@@ -211,15 +211,16 @@ app.post("/api/auth/product-signup", async (req, res) => {
       ...(businessName ? { business_name: businessName } : {}),
       ...(businessType ? { business_type: businessType } : {})
     };
+    const appMetadata = { ...(user?.app_metadata || {}), product_access: [...new Set([...(Array.isArray(user?.app_metadata?.product_access) ? user.app_metadata.product_access : []), product])] };
     if (user) {
       const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-        password, user_metadata: userMetadata, email_confirm: false
+        password, user_metadata: userMetadata, app_metadata: appMetadata, email_confirm: false
       });
       if (error) throw error;
       user = data.user;
     } else {
       const { data, error } = await admin.auth.admin.createUser({
-        email, password, email_confirm: false, user_metadata: userMetadata
+        email, password, email_confirm: false, user_metadata: userMetadata, app_metadata: appMetadata
       });
       if (error) throw error;
       user = data.user;
