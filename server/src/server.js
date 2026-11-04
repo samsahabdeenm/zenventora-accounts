@@ -23,15 +23,18 @@ app.use(cors({
   allowedHeaders: ["Content-Type"]
 }));
 
-const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM_EMAIL, OTP_PEPPER } = process.env;
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, RESEND_API_KEY, RESEND_FROM_EMAIL, OTP_PEPPER } = process.env;
 const adminConfigured = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const configured = Boolean(adminConfigured && RESEND_API_KEY && RESEND_FROM_EMAIL && OTP_PEPPER);
 const admin = adminConfigured ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
 }) : null;
 
-// Server-only client: the service-role credential is never returned to the browser.
-const authClient = admin;
+// The admin client is used only for privileged user and OTP operations.
+ // Password sign-in must use the project's public/anon key, never the service-role key.
+const authClient = SUPABASE_URL && SUPABASE_ANON_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
+  : null;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -135,6 +138,7 @@ app.post("/api/sso/verify", ssoVerifyLimiter, async (req, res) => {
         id: user.id,
         email: user.email.toLowerCase(),
         full_name: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "",
+        phone_e164: typeof user.user_metadata?.phone_e164 === "string" ? user.user_metadata.phone_e164 : "",
         email_verified: true,
         product_access: Array.isArray(user.app_metadata?.product_access) ? user.app_metadata.product_access : []
       }
