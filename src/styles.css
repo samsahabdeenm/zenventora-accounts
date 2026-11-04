@@ -60,3 +60,15 @@
 .operation-dialog>span:last-child{font-size:13px;line-height:1.55;color:#667085}
 @keyframes pv-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.loading-spinner{animation-duration:1.8s}}
+
+
+/* ZenVentora brand system: navy, teal and orange */
+:root{--zv-navy:#0b2440;--zv-blue:#0f3b68;--zv-teal:#0ea5a4;--zv-orange:#f97316;--zv-ink:#102033;--zv-muted:#64748b;--zv-line:#dbe6f3;--zv-soft:#f5f9fc}
+body{color:var(--zv-ink);background:var(--zv-soft)}.visual-panel{background:var(--zv-navy)}
+.visual-panel:before{background-image:radial-gradient(circle at 18% 20%,#7dd3d0 0 1px,transparent 2px),radial-gradient(circle at 78% 62%,#7dd3d0 0 1px,transparent 2px)}
+.visual-panel:after{background:linear-gradient(145deg,rgba(15,59,104,.12),rgba(7,25,43,.82))}.glow-one{background:var(--zv-teal)}.glow-two{background:var(--zv-orange)}
+.brand-symbol{border-color:#65d4cc;background:linear-gradient(135deg,var(--zv-blue),var(--zv-teal));transform:none;border-radius:12px;color:#fff}.brand-symbol span{transform:none}
+.welcome-tag,.eyebrow{color:var(--zv-teal)}.input-wrap:focus-within{border-color:var(--zv-teal);box-shadow:0 0 0 3px rgba(14,165,164,.13)}
+.text-button{color:var(--zv-blue)}.text-button:hover{color:var(--zv-teal)}.primary-button{background:linear-gradient(135deg,var(--zv-blue),var(--zv-teal));box-shadow:0 14px 30px rgba(15,59,104,.2)}
+.account-brand-mark{background:linear-gradient(135deg,var(--zv-blue),var(--zv-teal))}.sidebar-link.active{color:var(--zv-blue);background:rgba(14,165,164,.1)}
+.sidebar-link.active:before,.active-dot{background:var(--zv-teal)}.account-status,.verified-pill{color:#087f78}.form-panel{background:linear-gradient(180deg,#fff 0%,#f8fbfd 100%)}.account-home{background:var(--zv-soft)}
