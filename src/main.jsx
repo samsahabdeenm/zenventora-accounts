@@ -437,7 +437,7 @@ function App() {
     if (nextMode === "signin") setNewPassword("");
   }
 
-  if (user) return <><AccountHome user={user} onSignOut={signOut} isBusy={busy} productAccessNotice={productAccessNotice} productAccessActionUrl={productAccessActionUrl} />{busy && <div className="operation-overlay" role="status" aria-live="polite"><div className="operation-dialog"><span className="loading-spinner loading-spinner-large" aria-hidden="true" /><strong>Signing you out…</strong><span>Please wait while we securely end your session.</span></div></div>}</>;
+  if (user) return <><AccountHome user={user} onSignOut={signOut} isBusy={busy} productAccessNotice={productAccessNotice} productAccessActionUrl={productAccessActionUrl} />{busy && <div className="operation-overlay" role="status" aria-live="polite"><div className="operation-dialog"><span className="loading-spinner loading-spinner-large" aria-hidden="true" /><strong>Updating your account…</strong><span>Please wait while ZenVentora securely completes this account operation.</span></div></div>}</>;
 
   if (authStatusMode) return <div aria-hidden="true" />;
 
