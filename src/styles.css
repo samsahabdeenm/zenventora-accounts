@@ -144,3 +144,65 @@ body { color: var(--ink); background: var(--soft); font-family: Inter, system-ui
 .account-status, .verified-pill, .product-access-status.enabled { color: #087f78; }
 .product-access-icon { color: var(--blue); background: rgba(14,165,164,.12); }
 .product-open-link { color: #0f6e70; }
+
+/* Auth form and account dashboard responsive hardening */
+.signup-field-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.55fr);gap:12px}
+.signup-field-grid .field{min-width:0}
+.signup-field-grid input{min-width:0}
+.account-home,.account-content,.account-panel,.products-panel{min-width:0}
+.account-content{overflow-wrap:anywhere}
+.account-topbar{gap:14px}
+.account-brand-logo{max-width:min(160px,38vw);height:auto}
+.account-page-heading h1{overflow-wrap:anywhere}
+.product-access-card{min-width:0}
+.product-access-copy{min-width:0;overflow-wrap:anywhere}
+.profile-tabs{scrollbar-width:thin}
+@media(max-width:960px){
+  .page-shell{grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr)}
+  .visual-panel{padding:32px clamp(20px,3vw,34px) 24px}
+  .form-panel{padding:32px clamp(18px,3vw,28px) 18px}
+  .account-layout{grid-template-columns:220px minmax(0,1fr)}
+  .account-content{padding:26px 22px 18px}
+  .product-access-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .security-cards{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .page-shell{display:flex;flex-direction:column;min-height:100svh}
+  .visual-panel{display:none}
+  .form-panel{align-items:stretch;flex:1;padding:24px 20px 18px}
+  .mobile-brand{display:block;margin-bottom:28px}
+  .auth-card{margin:auto;padding:0;width:min(100%,480px)}
+  .auth-card h2{font-size:clamp(25px,7vw,30px)}
+  .signup-field-grid{grid-template-columns:minmax(0,1fr) minmax(100px,.55fr);gap:9px}
+  .account-layout{display:block;min-height:calc(100vh - 62px)}
+  .account-topbar{height:62px;padding:0 14px}
+  .account-sidebar{top:62px;width:min(300px,86vw)}
+  .account-content{padding:22px 16px 18px}
+  .account-page-heading{align-items:flex-start}
+  .account-page-heading h1{font-size:25px}
+  .account-breadcrumb{display:none}
+  .profile-overview{padding:18px 16px 0}
+  .profile-card-top{align-items:flex-start;flex-direction:column}
+  .profile-details-grid{grid-template-columns:1fr;row-gap:17px;padding:20px 2px}
+  .profile-panel-footer{align-items:flex-start;flex-direction:column}
+  .security-cards{grid-template-columns:1fr}
+  .product-access-grid{grid-template-columns:1fr}
+  .product-access-card{min-height:0}
+  .email-panel{padding:19px 16px}
+  .email-row{align-items:flex-start;flex-wrap:wrap}
+  .email-info{min-width:0;overflow-wrap:anywhere}
+  .account-footer{padding-top:24px}
+}
+@media(max-width:420px){
+  .form-panel{padding-inline:16px}
+  .mobile-brand{margin-bottom:22px}
+  .auth-card h2{font-size:25px}
+  .signup-field-grid{grid-template-columns:1fr}
+  .account-topbar{padding-inline:10px}
+  .account-content{padding-inline:12px}
+  .profile-identity{align-items:flex-start}
+  .profile-avatar{width:46px;height:46px}
+  .profile-tabs{gap:18px}
+  .profile-tabs button{font-size:11px}
+  .account-footer>div{gap:10px;flex-wrap:wrap}
+}
