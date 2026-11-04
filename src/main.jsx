@@ -48,7 +48,7 @@ async function apiPost(path, payload) {
 }
 
 function BrandMark() {
-  return <div className="brand"><img className="brand-logo-image" src="https://zenventora.in/assets/zenventora-logo.svg" alt="ZenVentora" /></div>;
+  return <div className="brand"><img className="brand-logo-image" src="/assets/zenventora-logo.svg" alt="ZenVentora" /></div>;
 }
 
 
@@ -74,7 +74,7 @@ function AccountHome({ user, onSignOut, isBusy }) {
   return <main className="account-home">
     <header className="account-topbar">
       <button className="mobile-menu-toggle" aria-label="Open navigation" onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? <X size={21}/> : <Menu size={21}/>}</button>
-      <div className="account-brand"><img className="account-brand-logo" src="https://zenventora.in/assets/zenventora-logo.svg" alt="ZenVentora" /></div>
+      <div className="account-brand"><img className="account-brand-logo" src="/assets/zenventora-logo.svg" alt="ZenVentora" /></div>
       <div className="topbar-right"><span className="topbar-label">My Account</span><div className="topbar-avatar">{initials || "Z"}</div></div>
     </header>
     <div className="account-layout">
