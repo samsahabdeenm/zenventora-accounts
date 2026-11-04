@@ -215,11 +215,11 @@ function App() {
       if (forceLogout) window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
-    const initialLogoutMarker = (() => { const match = document.cookie.match(/(?:^|;\\s*)zv_central_logout=([^;]+)/); return match ? decodeURIComponent(match[1]) : ""; })();
+    const initialLogoutMarker = (() => { const match = document.cookie.match(/(?:^|;\s*)zv_central_logout=([^;]+)/); return match ? decodeURIComponent(match[1]) : ""; })();
     let logoutCheckBusy = false;
     const checkExternalLogout = async () => {
       if (logoutCheckBusy || document.visibilityState === "hidden") return;
-      const match = document.cookie.match(/(?:^|;\\s*)zv_central_logout=([^;]+)/);
+      const match = document.cookie.match(/(?:^|;\s*)zv_central_logout=([^;]+)/);
       const marker = match ? decodeURIComponent(match[1]) : "";
       if (!marker || marker === initialLogoutMarker) return;
       logoutCheckBusy = true;
