@@ -33,9 +33,12 @@ npm start
 - `VITE_ACCOUNTS_API_URL`
 - `VITE_EMENU_SSO_CALLBACK` (optional exact HTTPS callback URL)
 - `VITE_SITERADAR_SSO_CALLBACK` (optional exact HTTPS callback URL)
-- `VITE_VISUAL_EDITOR_SSO_CALLBACK` (optional exact HTTPS callback URL)
+- `VITE_VISUAL_EDITOR_SSO_CALLBACK` (exact HTTPS callback URL)
+- `VITE_EMENU_APP_URL`
+- `VITE_SITERADAR_APP_URL`
+- `VITE_VISUAL_EDITOR_APP_URL`
 
-Only explicitly configured callback URLs are accepted. Product callback handlers must validate the central session server-side and enforce product entitlement before creating a product session.
+Product callback URLs must be configured for each product. The account app accepts only the exact callback configured for the selected product. Each product callback handler must validate the central session server-side and enforce product entitlement from server-controlled app metadata before creating a product session.
 
 Common login: `/login` or `/`. Common signup: `/signup`. Product login entries use `?product=emenu`, `?product=siteradar`, or `?product=visual-editor`.
 
