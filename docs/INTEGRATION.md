@@ -56,6 +56,7 @@ The `redirect_to` value is accepted only when it exactly matches the correspondi
 
 - General account signup: `POST /api/auth/signup`
 - Product signup: `POST /api/auth/product-signup`
+- Enable another product for an existing verified account: `POST /api/auth/product-access` (requires the current account access token)
 - Verify email: `POST /api/auth/verify-email`
 - Resend OTP: `POST /api/auth/resend-verification`
 - Product token verification: `POST /api/sso/verify`
