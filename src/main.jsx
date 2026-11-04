@@ -36,7 +36,7 @@ async function apiPost(path, payload) {
 }
 
 function BrandMark() {
-  return <div className="brand"><div className="brand-symbol" aria-hidden="true"><span>P</span></div><span className="brand-name">ZenVentora<span>accounts</span></span></div>;
+  return <div className="brand"><div className="brand-symbol" aria-hidden="true"><span>Z</span></div><span className="brand-name">ZenVentora<span>accounts</span></span></div>;
 }
 
 
