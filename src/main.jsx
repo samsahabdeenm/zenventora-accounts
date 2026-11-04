@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import { ArrowRight, Eye, EyeOff, ShieldCheck, LockKeyhole, Mail, UserRound, CheckCircle2, AlertCircle, Sparkles, UserCircle, Settings, Smartphone, Users, Lock, Award, CalendarDays, ChevronRight, LogOut, Menu, X, CircleHelp, Globe, KeyRound } from "lucide-react";
@@ -150,7 +150,7 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [productAccessNotice, setProductAccessNotice] = useState("");
   const [productAccessActionUrl, setProductAccessActionUrl] = useState("");
-  const [productAccessAttempted, setProductAccessAttempted] = useState(false);
+  const productAccessAttempted = useRef(false);
   const requestedAuthMode = new URLSearchParams(window.location.search).get("mode") || (window.location.pathname.toLowerCase() === "/signup" ? "signup" : "signin");
   const [configured] = useState(Boolean(supabase));
   const productContext = getProductContext();
@@ -275,8 +275,8 @@ function App() {
     };
     if (productAccess.includes(productContext)) {
       void continueToProduct().catch(() => {});
-    } else if (requestedAuthMode === "signup" && !productAccessAttempted) {
-      setProductAccessAttempted(true);
+    } else if (requestedAuthMode === "signup" && !productAccessAttempted.current) {
+      productAccessAttempted.current = true;
       setBusy(true);
       supabase.auth.getSession().then(async ({ data }) => {
         if (!data.session?.access_token) throw new Error("Your account session expired. Please sign in again.");
@@ -297,7 +297,7 @@ function App() {
       setProductAccessActionUrl(action.toString());
     }
     return () => { cancelled = true; };
-  }, [user, ssoRedirectTarget, productContext, requestedAuthMode, productAccessAttempted]);
+  }, [user, ssoRedirectTarget, productContext, requestedAuthMode]);
 
   function notify(type, message) { setNotice({ type, message }); }
 
