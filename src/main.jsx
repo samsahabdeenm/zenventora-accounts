@@ -225,14 +225,17 @@ function App() {
     let seenLogoutMarker = "";
     try { seenLogoutMarker = localStorage.getItem("zv_central_logout_seen") || ""; } catch {}
     let logoutCheckBusy = false;
-    if (initialLogoutMarker && initialLogoutMarker !== seenLogoutMarker) {
+    const pendingLogoutAtBoot = Boolean(initialLogoutMarker && initialLogoutMarker !== seenLogoutMarker);
+    if (pendingLogoutAtBoot) {
       try { localStorage.setItem("zv_central_logout_seen", initialLogoutMarker); } catch {}
       supabase.auth.signOut({ scope: "local" }).finally(() => { setUser(null); setAuthChecked(true); });
     }
     const checkExternalLogout = async () => {
       if (logoutCheckBusy || document.visibilityState === "hidden") return;
       const marker = readCentralLogoutMarker();
-      if (!marker || marker === initialLogoutMarker) return;
+      let seen = "";
+      try { seen = localStorage.getItem("zv_central_logout_seen") || ""; } catch {}
+      if (!marker || marker === seen) return;
       logoutCheckBusy = true;
       try { localStorage.setItem("zv_central_logout_seen", marker); } catch {}
       try { await supabase.auth.signOut({ scope: "local" }); } catch {}
@@ -241,12 +244,14 @@ function App() {
     const logoutTimer = window.setInterval(checkExternalLogout, 2000);
     window.addEventListener("focus", checkExternalLogout);
     document.addEventListener("visibilitychange", checkExternalLogout);
-    supabase.auth.getSession()
-      .then(({ data }) => {
-        setUser(data.session?.user ?? null);
-        setAuthChecked(true);
-      })
-      .catch(() => setAuthChecked(true));
+    if (!pendingLogoutAtBoot) {
+      supabase.auth.getSession()
+        .then(({ data }) => {
+          setUser(data.session?.user ?? null);
+          setAuthChecked(true);
+        })
+        .catch(() => setAuthChecked(true));
+    }
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setAuthChecked(true);
