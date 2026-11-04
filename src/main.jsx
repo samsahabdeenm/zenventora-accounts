@@ -89,12 +89,12 @@ function AccountHome({ user, onSignOut, isBusy }) {
         <div className="sidebar-bottom"><div className="help-card"><CircleHelp size={18}/><div><strong>Need help?</strong><span>We're here for you.</span></div><ChevronRight size={16}/></div><button className="sidebar-signout" onClick={onSignOut} disabled={isBusy} aria-busy={isBusy}>{isBusy ? <><span className="loading-spinner" aria-hidden="true" /> Signing out…</> : <><LogOut size={17}/> Sign out</>}</button></div>
       </aside>
       <section className="account-content">
-        <div className="account-page-heading"><div><div className="page-eyebrow">PURAVIGAL ACCOUNTS</div><h1>{activeNav}</h1><p>Manage your account information and preferences.</p></div><div className="account-breadcrumb">Account <ChevronRight size={14}/> {activeNav}</div></div>
+        <div className="account-page-heading"><div><div className="page-eyebrow">ZENVENTORA ACCOUNTS</div><h1>{activeNav}</h1><p>Manage your account information and preferences.</p></div><div className="account-breadcrumb">Account <ChevronRight size={14}/> {activeNav}</div></div>
         {activeNav === "My Products" ? <section className="products-panel"><div className="products-intro"><div className="page-eyebrow">YOUR ZENVENTORA WORKSPACE</div><h2>Products connected to your account</h2><p>Use one ZenVentora identity to access the products enabled for your account.</p></div><div className="product-access-grid">{[{slug:"emenu",name:"eMenu",description:"Digital menu and restaurant experience",url:import.meta.env.VITE_EMENU_APP_URL},{slug:"siteradar",name:"SiteRadar",description:"Website monitoring and site health",url:import.meta.env.VITE_SITERADAR_APP_URL},{slug:"visual-editor",name:"Site Visual Editor",description:"Visual website editing workspace",url:import.meta.env.VITE_VISUAL_EDITOR_APP_URL}].map(product => { const enabled = Array.isArray(user.app_metadata?.product_access) && user.app_metadata.product_access.includes(product.slug); return <article className="product-access-card" key={product.slug}><div className="product-access-icon"><Sparkles size={20}/></div><div className="product-access-copy"><h3>{product.name}</h3><p>{product.description}</p></div><span className={enabled ? "product-access-status enabled" : "product-access-status"}>{enabled ? "Access enabled" : "Not enabled"}</span>{enabled && product.url ? <a className="product-open-link" href={product.url}>Open product <ArrowRight size={15}/></a> : <span className="product-access-help">{enabled ? "Product URL will be configured soon." : "Access is managed by ZenVentora."}</span>}</article>; })}</div></section> : activeNav === "Profile" ? <>
           <div className="profile-tabs" role="tablist" aria-label="Profile sections">{profileTabs.map(tab => <button key={tab} role="tab" aria-selected={activeProfileTab === tab} className={activeProfileTab === tab ? "selected" : ""} onClick={() => setActiveProfileTab(tab)}>{tab}</button>)}</div>
           {activeProfileTab === "Personal Information" && <>
             <section className="account-panel profile-overview">
-              <div className="profile-card-top"><div className="profile-identity"><div className="profile-avatar">{initials || "P"}</div><div><h2>{name}</h2><p>{email}</p></div></div><span className="account-status"><CheckCircle2 size={15}/> Email verified</span></div>
+              <div className="profile-card-top"><div className="profile-identity"><div className="profile-avatar">{initials || "Z"}</div><div><h2>{name}</h2><p>{email}</p></div></div><span className="account-status"><CheckCircle2 size={15}/> Email verified</span></div>
               <div className="profile-details-grid">
                 <div className="profile-detail"><span>Full name</span><strong>{name}</strong></div>
                 <div className="profile-detail"><span>Display name</span><strong>{name.split(/\s+/)[0]}</strong></div>
@@ -321,12 +321,6 @@ function App() {
   async function signOut() {
     if (!supabase || busy) return;
     setBusy(true);
-    let accessToken = null;
-    try {
-      const { data } = await supabase.auth.getSession();
-      accessToken = data.session?.access_token || null;
-    } catch (_) {}
-
     // End the central browser session first so logout is immediate even if POS is unavailable.
     const { error } = await supabase.auth.signOut();
     setBusy(false);
@@ -384,7 +378,7 @@ function App() {
     <section className="form-panel">
       <div className="mobile-brand"><BrandMark /></div>
       <div className="auth-card">
-        <div className="welcome-tag">PURAVIGAL ACCOUNTS</div>
+        <div className="welcome-tag">ZENVENTORA ACCOUNTS</div>
         <h2>{title}</h2>
         <p className="subtitle">{isSignup ? "Get started with one account for ZenVentora products." : isVerify ? `Enter the 6-digit code sent to ${email.trim()}.` : isResetVerify ? `Enter the code sent to ${email.trim()} and choose a new password.` : isReset ? "We'll send a secure 6-digit code to your email." : productContext === "zenventora" ? "Sign in to manage your ZenVentora account." : "Sign in to continue to " + productLabel + "."}</p>
         {!configured && <div className="notice error"><AlertCircle size={18} /><span>Supabase configuration is pending. Authentication will work after environment setup.</span></div>}
