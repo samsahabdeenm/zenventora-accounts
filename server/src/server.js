@@ -199,7 +199,7 @@ app.post("/api/auth/product-access", async (req, res) => {
   }
 });
 app.post("/api/auth/product-signup", async (req, res) => {
-  if (!configured) return fail(res, 503, "Account verification service is not configured yet.");
+  if (!configured || !authClient) return fail(res, 503, "Product signup is not configured for automatic secure sign-in yet.");
   const product = typeof req.body?.product === "string" ? req.body.product.trim().toLowerCase() : "";
   const email = normalizeEmail(req.body?.email);
   const password = req.body?.password;
