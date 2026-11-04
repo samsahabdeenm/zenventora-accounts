@@ -305,7 +305,12 @@ function App() {
           setProductAccessNotice("");
         }
       }).catch(error => {
-        if (!cancelled) setProductAccessNotice(error.message || "Could not enable product access. Please try again.");
+        if (!cancelled) {
+          setProductAccessNotice(error.message || "Could not enable product access. Please try again.");
+          const retry = new URL(window.location.href);
+          retry.searchParams.set("mode", "signup");
+          setProductAccessActionUrl(retry.toString());
+        }
       }).finally(() => { if (!cancelled) setBusy(false); });
     } else if (requestedAuthMode !== "signup") {
       setProductAccessNotice(productLabel + " access is not enabled for this account yet.");
