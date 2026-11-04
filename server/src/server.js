@@ -201,7 +201,6 @@ app.post("/api/auth/product-signup", async (req, res) => {
       ...(user?.user_metadata || {}),
       full_name: fullName,
       signup_product: product,
-      product_access: [...new Set([...(Array.isArray(user?.user_metadata?.product_access) ? user.user_metadata.product_access : []), product])],
       phone_country_code: countryCode,
       phone_country_name: countryName,
       phone_number: phoneNumber,
