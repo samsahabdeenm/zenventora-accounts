@@ -7,11 +7,10 @@ import "./styles.css";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const apiUrl = (import.meta.env.VITE_ACCOUNTS_API_URL || "").replace(/\/$/, "");
-const posApiUrl = "https://pos.zenventora.in";
-const ALLOWED_SSO_REDIRECTS = new Set([
-  "https://pos.zenventora.in/sso/callback",
-  "https://micropos-t0bg.onrender.com/sso/callback"
-]);
+const posApiUrl = (import.meta.env.VITE_POS_API_URL || "").replace(/\/$/, "");
+const ALLOWED_SSO_REDIRECTS = new Set(
+  (import.meta.env.VITE_ALLOWED_SSO_REDIRECTS || "").split(",").map(value => value.trim()).filter(Boolean)
+);
 function getSsoRedirectTarget() {
   const requested = new URLSearchParams(window.location.search).get("redirect_to");
   return ALLOWED_SSO_REDIRECTS.has(requested) ? requested : null;
@@ -37,7 +36,7 @@ async function apiPost(path, payload) {
 }
 
 function BrandMark() {
-  return <div className="brand"><div className="brand-symbol" aria-hidden="true"><span>P</span></div><span className="brand-name">puravigal<span>accounts</span></span></div>;
+  return <div className="brand"><div className="brand-symbol" aria-hidden="true"><span>P</span></div><span className="brand-name">ZenVentora<span>accounts</span></span></div>;
 }
 
 
@@ -142,17 +141,8 @@ function App() {
   const isOtpScreen = isVerify || isResetVerify;
   const title = useMemo(() => isSignup ? "Create your ZenVentora account" : isVerify ? "Verify your email" : isResetVerify ? "Reset your password" : isReset ? "Reset your password" : "Welcome back", [isSignup, isVerify, isReset, isResetVerify]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const path = window.location.pathname.toLowerCase();
-    if (params.get("mode") !== "signup" && path !== "/signup" && path !== "/create-account") return;
-    const requested = params.get("redirect_to");
-    const posCallback = "https://pos.zenventora.in/sso/callback";
-    const target = requested === posCallback || requested === "https://micropos-t0bg.onrender.com/sso/callback"
-      ? "https://www.zenventora.in/pos/signup.html"
-      : "https://www.zenventora.in/signup.html";
-    window.location.replace(target);
-  }, []);
+  // Signup, login and recovery are handled centrally on accounts.zenventora.in.
+  // Product context stays in the query string; no product-specific signup redirect.
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
