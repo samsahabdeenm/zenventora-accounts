@@ -24,6 +24,15 @@ Listen for a `message` from the exact Accounts origin and verify both `event.ori
 A minimal website-side handler:
 
 ```html
+<div data-zv-profile hidden>
+  <span data-zv-name></span>
+  <span data-zv-email></span>
+  <button type="button" onclick="zenVentoraSignOut()">Sign out</button>
+</div>
+<div data-zv-auth-actions>
+  <a href="https://accounts.zenventora.in/?mode=signin">Sign in</a>
+  <a href="https://accounts.zenventora.in/?mode=signup">Sign up</a>
+</div>
 <iframe id="zv-auth-status" title="ZenVentora account status"
   src="https://accounts.zenventora.in/?auth_status=1&parent_origin=https%3A%2F%2Fzenventora.in"
   hidden></iframe>
@@ -37,7 +46,10 @@ A minimal website-side handler:
     const authActions = document.querySelector("[data-zv-auth-actions]");
     if (profile) {
       profile.hidden = !data.authenticated;
-      if (data.authenticated) profile.textContent = data.fullName || data.email;
+      const name = profile.querySelector("[data-zv-name]");
+      const email = profile.querySelector("[data-zv-email]");
+      if (name) name.textContent = data.fullName || "My account";
+      if (email) email.textContent = data.email || "";
     }
     if (authActions) authActions.hidden = Boolean(data.authenticated);
   });
