@@ -26,6 +26,8 @@ function getAuthReturnUrl(product, redirectTarget) {
   const url = new URL(window.location.pathname, window.location.origin);
   if (product !== "zenventora") url.searchParams.set("product", product);
   if (redirectTarget) url.searchParams.set("redirect_to", redirectTarget);
+  const state = new URLSearchParams(window.location.search).get("state");
+  if (state) url.searchParams.set("state", state);
   return url.toString();
 }
 
@@ -33,7 +35,7 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 function markCentralSignOut() {
   // Non-secret cross-subdomain signal so open product tabs can immediately clear local sessions.
-  document.cookie = "zv_central_logout=" + Date.now() + "; Domain=.zenventora.com; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
+  document.cookie = "zv_central_logout=" + Date.now() + "; Domain=.zenventora.in; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
 }
 
 async function apiPost(path, payload) {
@@ -134,6 +136,11 @@ function App() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
+  const [countryName, setCountryName] = useState("India");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("");
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -234,7 +241,10 @@ function App() {
     supabase.auth.getSession().then(({ data }) => {
       const accessToken = data.session?.access_token;
       if (!cancelled && accessToken) {
-        window.location.replace(ssoRedirectTarget + "#account_access_token=" + encodeURIComponent(accessToken));
+        const refreshToken = data.session?.refresh_token;
+        const state = new URLSearchParams(window.location.search).get("state") || "";
+        const fragment = new URLSearchParams({ account_access_token: accessToken, account_refresh_token: refreshToken || "", account_state: state });
+        window.location.replace(ssoRedirectTarget + "#" + fragment.toString());
       }
     }).catch(() => {});
     return () => { cancelled = true; };
@@ -266,12 +276,30 @@ function App() {
     setBusy(true);
     try {
       if (isSignup) {
-        await apiPost("/api/auth/signup", { email: email.trim(), password, fullName: fullName.trim(), product: "zenventora" });
+        const productSignupPayload = {
+          email: email.trim(), password, fullName: fullName.trim(),
+          product: productContext, countryCode, countryName, phoneNumber,
+          businessName: businessName.trim(), businessType: businessType.trim()
+        };
+        await apiPost(productContext === "zenventora" ? "/api/auth/signup" : "/api/auth/product-signup",
+          productContext === "zenventora" ? { email: email.trim(), password, fullName: fullName.trim() } : productSignupPayload);
         setOtp("");
         setMode("verify");
         notify("success", "A 6-digit verification code has been sent to your email. Enter it below.");
       } else if (isVerify) {
-        await apiPost("/api/auth/verify-email", { email: email.trim(), otp: otp.trim() });
+        const verification = await apiPost("/api/auth/verify-email", {
+          email: email.trim(), otp: otp.trim(),
+          ...(productContext !== "zenventora" ? { returnSession: true, password } : {})
+        });
+        if (productContext !== "zenventora" && verification?.session?.access_token && verification?.session?.refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token: verification.session.access_token,
+            refresh_token: verification.session.refresh_token
+          });
+          if (error) throw error;
+          notify("success", "Email verified. Opening " + productLabel + "…");
+          return;
+        }
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) {
           notify("success", "Email verified successfully. Please sign in with the password you created.");
@@ -379,12 +407,21 @@ function App() {
     <section className="form-panel">
       <div className="mobile-brand"><BrandMark /></div>
       <div className="auth-card">
-        <div className="welcome-tag">{isSignup ? "CREATE YOUR ACCOUNT" : isOtpScreen ? "ACCOUNT VERIFICATION" : isReset ? "ACCOUNT RECOVERY" : productContext === "zenventora" ? "ZENVENTORA ACCOUNTS" : productLabel.toUpperCase()}</div>
+        <div className="welcome-tag">{isSignup ? (productContext === "zenventora" ? "CREATE YOUR ACCOUNT" : "CREATE " + productLabel.toUpperCase() + " ACCOUNT") : isOtpScreen ? "ACCOUNT VERIFICATION" : isReset ? "ACCOUNT RECOVERY" : productContext === "zenventora" ? "ZENVENTORA ACCOUNTS" : productLabel.toUpperCase()}</div>
         <h2>{title}</h2>
-        <p className="subtitle">{isSignup ? "Get started with one account for ZenVentora products." : isVerify ? `Enter the 6-digit code sent to ${email.trim()}.` : isResetVerify ? `Enter the code sent to ${email.trim()} and choose a new password.` : isReset ? "We'll send a secure 6-digit code to your email." : productContext === "zenventora" ? "Sign in to manage your ZenVentora account." : "Sign in to continue to " + productLabel + "."}</p>
+        <p className="subtitle">{isSignup ? (productContext === "zenventora" ? "Get started with one account for ZenVentora products." : "Create your " + productLabel + " account with your ZenVentora identity.") : isVerify ? `Enter the 6-digit code sent to ${email.trim()}.` : isResetVerify ? `Enter the code sent to ${email.trim()} and choose a new password.` : isReset ? "We'll send a secure 6-digit code to your email." : productContext === "zenventora" ? "Sign in to manage your ZenVentora account." : "Sign in to continue to " + productLabel + "."}</p>
         {!configured && <div className="notice error"><AlertCircle size={18} /><span>Supabase configuration is pending. Authentication will work after environment setup.</span></div>}
         {user ? <div className="signed-in-card"><div className="success-icon"><CheckCircle2 size={26} /></div><h3>You are signed in</h3><p>{user.email}</p><p className="muted">Your ZenVentora identity is ready to use across connected products.</p><button className="primary-button" onClick={signOut}>Sign out</button></div> : <form onSubmit={handleSubmit}>
           {isSignup && <label className="field"><span>Full name</span><div className="input-wrap"><UserRound size={18} /><input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" required minLength={2} /></div></label>}
+          {isSignup && productContext !== "zenventora" && <>
+            <div className="signup-field-grid">
+              <label className="field"><span>Country</span><div className="input-wrap"><Globe size={18}/><input value={countryName} onChange={e=>setCountryName(e.target.value)} autoComplete="country-name" placeholder="Country" required/></div></label>
+              <label className="field"><span>Calling code</span><div className="input-wrap"><input value={countryCode} onChange={e=>setCountryCode(e.target.value)} placeholder="+91" inputMode="tel" required/></div></label>
+            </div>
+            <label className="field"><span>Mobile number</span><div className="input-wrap"><Smartphone size={18}/><input value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value.replace(/[^0-9]/g,"").slice(0,15))} inputMode="numeric" autoComplete="tel-national" placeholder="Your mobile number" required minLength={6} maxLength={15}/></div></label>
+            <label className="field"><span>Business name <small>(optional)</small></span><div className="input-wrap"><input value={businessName} onChange={e=>setBusinessName(e.target.value)} autoComplete="organization" placeholder="Business / workspace name"/></div></label>
+            <label className="field"><span>Business type <small>(optional)</small></span><div className="input-wrap"><input value={businessType} onChange={e=>setBusinessType(e.target.value)} placeholder="Restaurant, agency, etc."/></div></label>
+          </>}
           <label className="field"><span>Email address</span><div className="input-wrap"><Mail size={18} /><input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required readOnly={isOtpScreen} /></div></label>
           {isOtpScreen && <label className="field"><span>6-digit verification code</span><div className="input-wrap"><ShieldCheck size={18} /><input type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter code" required minLength={6} maxLength={6} pattern="[0-9]{6}" aria-label="6-digit verification code" /></div></label>}
           {!isVerify && !isReset && !isResetVerify && <label className="field"><span>Password</span><div className="input-wrap"><LockKeyhole size={18} /><input type={showPassword ? "text" : "password"} autoComplete={isSignup ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} placeholder={isSignup ? "At least 8 characters" : "Enter your password"} required minLength={isSignup ? 8 : undefined} /><button className="icon-button" type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>}
@@ -392,7 +429,7 @@ function App() {
           {!isSignup && !isOtpScreen && !isReset && <div className="form-meta"><button type="button" className="text-button" onClick={() => switchMode("reset")}>Forgot password?</button></div>}
           {isSignup && <p className="terms">By creating an account, you agree to ZenVentora's Terms of Service and Privacy Policy.</p>}
           {notice && <div className={`notice ${notice.type}`}>{notice.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}<span>{notice.message}</span></div>}
-          <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? <><span className="loading-spinner" aria-hidden="true" /> Please wait…</> : <>{isSignup ? "Create account" : isVerify ? "Verify email" : isResetVerify ? "Reset password" : isReset ? "Send reset code" : "Sign in"} <ArrowRight size={18} /></>}</button>
+          <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? <><span className="loading-spinner" aria-hidden="true" /> Please wait…</> : <>{isSignup ? (productContext === "zenventora" ? "Create account" : "Create " + productLabel + " account") : isVerify ? "Verify email" : isResetVerify ? "Reset password" : isReset ? "Send reset code" : "Sign in"} <ArrowRight size={18} /></>}</button>
           {isOtpScreen && <div className="switch-mode"><span>Didn't receive the code?</span><button type="button" className="text-button" disabled={busy} onClick={resendOtp}>Resend code</button><span>·</span><button type="button" className="text-button" onClick={() => switchMode(isVerify ? "signup" : "reset")}>{isVerify ? "Change email" : "Back"}</button></div>}
         </form>}
         {!user && !isOtpScreen && !isReset && <div className="google-auth-options">
