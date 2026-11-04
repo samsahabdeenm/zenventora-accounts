@@ -21,6 +21,36 @@ To determine whether a visitor already has an authenticated account, load a hidd
 
 Listen for a `message` from the exact Accounts origin and verify both `event.origin === "https://accounts.zenventora.in"` and `event.data.type === "ZENVENTORA_AUTH_STATUS"`. The message contains `authenticated`, `fullName`, `email`, and `parentOrigin`. Render the profile card only when `authenticated === true`; otherwise render Sign in / Sign up.
 
+A minimal website-side handler:
+
+```html
+<iframe id="zv-auth-status" title="ZenVentora account status"
+  src="https://accounts.zenventora.in/?auth_status=1&parent_origin=https%3A%2F%2Fzenventora.in"
+  hidden></iframe>
+<script>
+  window.addEventListener("message", (event) => {
+    if (event.origin !== "https://accounts.zenventora.in") return;
+    const data = event.data;
+    if (!data || data.type !== "ZENVENTORA_AUTH_STATUS") return;
+    if (data.parentOrigin !== window.location.origin) return;
+    const profile = document.querySelector("[data-zv-profile]");
+    const authActions = document.querySelector("[data-zv-auth-actions]");
+    if (profile) {
+      profile.hidden = !data.authenticated;
+      if (data.authenticated) profile.textContent = data.fullName || data.email;
+    }
+    if (authActions) authActions.hidden = Boolean(data.authenticated);
+  });
+  function zenVentoraSignOut() {
+    const frame = document.getElementById("zv-auth-status");
+    frame.src = "https://accounts.zenventora.in/?auth_action=signout&parent_origin=" +
+      encodeURIComponent(window.location.origin) + "&t=" + Date.now();
+  }
+</script>
+```
+
+Keep the Sign in / Sign up links visible until the first status message arrives. The iframe status check is a UI signal only; never use it as authorization for a protected API.
+
 To sign out from the website, load a hidden iframe with:
 
 `https://accounts.zenventora.in/?auth_action=signout&parent_origin=https%3A%2F%2Fzenventora.in`
