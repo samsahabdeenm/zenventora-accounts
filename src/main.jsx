@@ -407,7 +407,7 @@ function App() {
           </button>
           <div className="auth-divider"><span>or continue with email</span></div>
         </div>}
-        {!user && !isOtpScreen && <div className="switch-mode">{isReset ? <>Remembered your password? <button className="text-button" onClick={() => switchMode("signin")}>Back to sign in</button></> : <>Need a ZenVentora account? <button type="button" className="text-button" onClick={() => switchMode("signup")}>Create an account</button></>}</div>}
+        {!user && !isOtpScreen && <div className="switch-mode">{isReset ? <>Remembered your password? <button className="text-button" onClick={() => switchMode("signin")}>Back to sign in</button></> : isSignup ? <>Already have a ZenVentora account? <button type="button" className="text-button" onClick={() => switchMode("signin")}>Sign in</button></> : <>Need a ZenVentora account? <button type="button" className="text-button" onClick={() => switchMode("signup")}>Create an account</button></>}</div>}
         <div className="security-note"><ShieldCheck size={17} /><span>Your account security matters. Never share your password or verification codes.</span></div>
       </div>
       <footer className="form-footer">© {new Date().getFullYear()} ZenVentora. All rights reserved.</footer>
