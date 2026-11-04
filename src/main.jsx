@@ -33,9 +33,15 @@ function getAuthReturnUrl(product, redirectTarget) {
 
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
+function readCentralLogoutMarker() {
+  const match = document.cookie.match(/(?:^|;\s*)zv_central_logout=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
 function markCentralSignOut() {
   // Non-secret cross-subdomain signal so open product tabs can immediately clear local sessions.
-  document.cookie = "zv_central_logout=" + Date.now() + "; Domain=.zenventora.in; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
+  const marker = String(Date.now());
+  document.cookie = "zv_central_logout=" + marker + "; Domain=.zenventora.in; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
+  try { localStorage.setItem("zv_central_logout_seen", marker); } catch {}
 }
 
 async function apiPost(path, payload) {
@@ -215,14 +221,20 @@ function App() {
       if (forceLogout) window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
-    const initialLogoutMarker = (() => { const match = document.cookie.match(/(?:^|;\s*)zv_central_logout=([^;]+)/); return match ? decodeURIComponent(match[1]) : ""; })();
+    const initialLogoutMarker = readCentralLogoutMarker();
+    let seenLogoutMarker = "";
+    try { seenLogoutMarker = localStorage.getItem("zv_central_logout_seen") || ""; } catch {}
     let logoutCheckBusy = false;
+    if (initialLogoutMarker && initialLogoutMarker !== seenLogoutMarker) {
+      try { localStorage.setItem("zv_central_logout_seen", initialLogoutMarker); } catch {}
+      supabase.auth.signOut({ scope: "local" }).finally(() => { setUser(null); setAuthChecked(true); });
+    }
     const checkExternalLogout = async () => {
       if (logoutCheckBusy || document.visibilityState === "hidden") return;
-      const match = document.cookie.match(/(?:^|;\s*)zv_central_logout=([^;]+)/);
-      const marker = match ? decodeURIComponent(match[1]) : "";
+      const marker = readCentralLogoutMarker();
       if (!marker || marker === initialLogoutMarker) return;
       logoutCheckBusy = true;
+      try { localStorage.setItem("zv_central_logout_seen", marker); } catch {}
       try { await supabase.auth.signOut({ scope: "local" }); } catch {}
       finally { setUser(null); setAuthChecked(true); logoutCheckBusy = false; }
     };
