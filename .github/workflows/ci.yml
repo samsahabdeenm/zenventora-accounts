@@ -1,0 +1,30 @@
+name: ZenVentora Accounts CI
+
+on:
+  push:
+    branches:
+      - zenventora-branding-and-common-auth
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install frontend dependencies
+        run: npm install
+      - name: Build frontend
+        run: npm run build
+      - name: Install API dependencies
+        working-directory: server
+        run: npm install
+      - name: Check API syntax
+        working-directory: server
+        run: node --check src/server.js
