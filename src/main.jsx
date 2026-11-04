@@ -48,7 +48,7 @@ async function apiPost(path, payload) {
 }
 
 function BrandMark() {
-  return <div className="brand"><div className="brand-symbol" aria-hidden="true"><span>Z</span></div><span className="brand-name">ZenVentora<span>ACCOUNTS</span></span></div>;
+  return <div className="brand"><img className="brand-logo-image" src="https://zenventora.in/assets/zenventora-logo.svg" alt="ZenVentora" /></div>;
 }
 
 
@@ -74,7 +74,7 @@ function AccountHome({ user, onSignOut, isBusy }) {
   return <main className="account-home">
     <header className="account-topbar">
       <button className="mobile-menu-toggle" aria-label="Open navigation" onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? <X size={21}/> : <Menu size={21}/>}</button>
-      <div className="account-brand"><div className="account-brand-mark">Z</div><span>ZenVentora <small>ACCOUNTS</small></span></div>
+      <div className="account-brand"><img className="account-brand-logo" src="https://zenventora.in/assets/zenventora-logo.svg" alt="ZenVentora" /></div>
       <div className="topbar-right"><span className="topbar-label">My Account</span><div className="topbar-avatar">{initials || "Z"}</div></div>
     </header>
     <div className="account-layout">
@@ -378,7 +378,7 @@ function App() {
     <section className="form-panel">
       <div className="mobile-brand"><BrandMark /></div>
       <div className="auth-card">
-        <div className="welcome-tag">ZENVENTORA ACCOUNTS</div>
+        <div className="welcome-tag">{isSignup ? "CREATE YOUR ACCOUNT" : isOtpScreen ? "ACCOUNT VERIFICATION" : isReset ? "ACCOUNT RECOVERY" : productContext === "zenventora" ? "ZENVENTORA ACCOUNTS" : productLabel.toUpperCase()}</div>
         <h2>{title}</h2>
         <p className="subtitle">{isSignup ? "Get started with one account for ZenVentora products." : isVerify ? `Enter the 6-digit code sent to ${email.trim()}.` : isResetVerify ? `Enter the code sent to ${email.trim()} and choose a new password.` : isReset ? "We'll send a secure 6-digit code to your email." : productContext === "zenventora" ? "Sign in to manage your ZenVentora account." : "Sign in to continue to " + productLabel + "."}</p>
         {!configured && <div className="notice error"><AlertCircle size={18} /><span>Supabase configuration is pending. Authentication will work after environment setup.</span></div>}
