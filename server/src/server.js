@@ -71,7 +71,6 @@ async function findUserByEmail(email) {
 async function sendOtpEmail(email, otp, purpose) {
   const isSignup = purpose === "signup";
   const subject = isSignup ? "Your ZenVentora verification code" : "Your ZenVentora password reset code";
-  const heading = isSignup ? "Verify your ZenVentora account" : "Reset your ZenVentora password";
   const action = isSignup ? "verify your email address" : "reset your password";
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#17213b"><h2>ZenVentora Accounts</h2><p>Use this code to ${action}:</p><div style="font-size:32px;font-weight:800;letter-spacing:8px;padding:16px;background:#f3f6ff;border-radius:10px;text-align:center">${otp}</div><p>This code expires in 10 minutes and can be used only once.</p><p>If you did not request this, you can safely ignore this email.</p></div>`;
   const response = await fetch("https://api.resend.com/emails", {
