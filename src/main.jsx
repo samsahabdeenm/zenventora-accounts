@@ -18,8 +18,9 @@ function getProductContext() {
   return Object.prototype.hasOwnProperty.call(PRODUCT_LABELS, requested) ? requested : "zenventora";
 }
 function getSsoRedirectTarget(product = getProductContext()) {
-  const requested = new URLSearchParams(window.location.search).get("redirect_to") || PRODUCT_CALLBACKS[product] || "";
-  return new Set(Object.values(PRODUCT_CALLBACKS).filter(Boolean)).has(requested) ? requested : null;
+  const expected = PRODUCT_CALLBACKS[product] || "";
+  const requested = new URLSearchParams(window.location.search).get("redirect_to") || expected;
+  return expected && requested === expected ? expected : null;
 }
 function getAuthReturnUrl(product, redirectTarget) {
   const url = new URL(window.location.pathname, window.location.origin);
