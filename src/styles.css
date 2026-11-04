@@ -99,3 +99,48 @@ body{color:var(--zv-ink);background:var(--zv-soft)}.visual-panel{background:var(
 .product-access-icon{color:#0f3b68;background:rgba(14,165,164,.12)}
 .product-open-link{color:#0f6e70}
 @media(max-width:760px){.brand-logo-image{width:170px}.account-brand-logo{width:138px}}
+
+
+/* Official ZenVentora website design tokens — source: samsahabdeenm/zenventora/styles.css */
+:root {
+  --navy: #0b2440;
+  --blue: #0f3b68;
+  --teal: #0ea5a4;
+  --orange: #f97316;
+  --ink: #102033;
+  --muted: #64748b;
+  --line: #dbe6f3;
+  --soft: #f5f9fc;
+  --white: #fff;
+  --shadow: 0 22px 60px rgba(15, 59, 104, .14);
+  --radius: 22px;
+  --zv-navy: var(--navy);
+  --zv-blue: var(--blue);
+  --zv-teal: var(--teal);
+  --zv-orange: var(--orange);
+  --zv-ink: var(--ink);
+  --zv-muted: var(--muted);
+  --zv-line: var(--line);
+  --zv-soft: var(--soft);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--soft);
+}
+body { color: var(--ink); background: var(--soft); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.visual-panel { background: var(--navy); }
+.visual-panel:before { background-image: radial-gradient(circle at 18% 20%, var(--teal) 0 1px, transparent 2px), radial-gradient(circle at 78% 62%, var(--teal) 0 1px, transparent 2px); }
+.visual-panel:after { background: linear-gradient(145deg, rgba(15,59,104,.10), rgba(7,27,49,.78)); }
+.glow-one { background: var(--blue); }
+.glow-two { background: var(--teal); }
+.brand-symbol, .account-brand-mark { border-color: var(--teal); background: linear-gradient(135deg, var(--blue), var(--teal)); }
+.welcome-tag, .eyebrow, .page-eyebrow { color: var(--teal); }
+.primary-button { background: linear-gradient(135deg, var(--blue), var(--teal)); box-shadow: 0 10px 24px rgba(15,59,104,.18); }
+.input-wrap:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,165,164,.13); }
+.text-button { color: var(--blue); }
+.text-button:hover { color: var(--teal); }
+.profile-tabs button.selected { color: var(--blue); }
+.profile-tabs button.selected:after, .sidebar-link.active:before, .active-dot { background: var(--teal); }
+.sidebar-link.active { color: var(--blue); background: rgba(14,165,164,.10); }
+.account-status, .verified-pill, .product-access-status.enabled { color: #087f78; }
+.product-access-icon { color: var(--blue); background: rgba(14,165,164,.12); }
+.product-open-link { color: #0f6e70; }
