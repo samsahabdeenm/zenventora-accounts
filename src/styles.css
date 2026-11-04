@@ -206,3 +206,7 @@ body { color: var(--ink); background: var(--soft); font-family: Inter, system-ui
   .profile-tabs button{font-size:11px}
   .account-footer>div{gap:10px;flex-wrap:wrap}
 }
+
+/* Prevent narrow screens from forcing profile tabs wider than the viewport. */
+.profile-tabs{max-width:100%;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.profile-tabs button{flex:0 0 auto}
