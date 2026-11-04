@@ -179,6 +179,25 @@ app.post("/api/auth/signup", async (req, res) => {
     return fail(res, error.status || 502, error.status === 429 ? error.message : "Unable to send the verification code right now. Please try again later.");
   }
 });
+app.post("/api/auth/product-access", async (req, res) => {
+  if (!admin) return fail(res, 503, "Account service is not configured.");
+  const product = typeof req.body?.product === "string" ? req.body.product.trim().toLowerCase() : "";
+  const accessToken = typeof req.body?.access_token === "string" ? req.body.access_token : "";
+  if (!["emenu", "siteradar", "visual-editor"].includes(product)) return fail(res, 400, "Choose a valid ZenVentora product.");
+  if (accessToken.length < 20 || accessToken.length > 8192) return fail(res, 401, "A valid signed-in account session is required.");
+  try {
+    const { data, error } = await admin.auth.getUser(accessToken);
+    const user = data?.user;
+    if (error || !user?.email_confirmed_at) return fail(res, 401, "Your account session is invalid or your email is not verified.");
+    const productAccess = [...new Set([...(Array.isArray(user.app_metadata?.product_access) ? user.app_metadata.product_access : []), product])];
+    const { error: updateError } = await admin.auth.admin.updateUserById(user.id, { app_metadata: { ...(user.app_metadata || {}), product_access: productAccess } });
+    if (updateError) throw updateError;
+    return res.json({ ok: true, product_access: productAccess });
+  } catch (error) {
+    console.error("Product access grant failed:", error.message);
+    return fail(res, 503, "Could not enable this product right now. Please try again.");
+  }
+});
 app.post("/api/auth/product-signup", async (req, res) => {
   if (!configured) return fail(res, 503, "Account verification service is not configured yet.");
   const product = typeof req.body?.product === "string" ? req.body.product.trim().toLowerCase() : "";
